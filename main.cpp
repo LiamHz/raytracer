@@ -1,13 +1,20 @@
 #include <iostream>
 #include <fstream>
-// #include "vec3.h"
 #include "ray.h"
 
 // Write a ppm image file
 
 vec3 color(const ray& r) {
+    // Blend white and blue depending on the y coord of the ray
+
+    // Turn ray into a unit vector. This makes -1.0 < y < 1.0
     vec3 unit_direction = unit_vector(r.direction());
-    float t = 0.5*(unit_direction.y() + 1.9);
+
+    // Scale ray to 0.0 < t < 1.0
+    float t = 0.5*(unit_direction.y() + 1.0);
+
+    // Return a linear interpolation (lerp) between
+    // blue (t=1.0) and white (t=0.0)
     return (1.0-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
 }
 
@@ -37,6 +44,9 @@ int main() {
 
     ofs << "P3\n" << nx << " " << ny << "\n255\n";
 
+    // Define dimensions of the canvas
+    // Horizontal and vertical define the other corners of the canvas relative
+    // to the lower_left_corner
     vec3 lower_left_corner(-2.0, -1.0, -1.0);
     vec3 horizontal(4.0, 0.0, 0.0);
     vec3 vertical(0.0, 2.0, 0.0);
