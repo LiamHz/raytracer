@@ -1,60 +1,33 @@
 #include <iostream>
 #include <fstream>
+#include "sphere.h"
+#include "hitable_list.h"
 #include "ray.h"
 
 // Write a ppm image file with a background, and a sphere using ray tracing
 
-// The equation for a sphere  at (cx, cy, cz) is
-// dot((p - c), (p - c)) = r*r
-// Where c is the center of the sphere, p is a point on the sphere,
-// and r is the radius of the sphere
+vec3 color(const ray& r, hitable *world) {
 
-// Rays that hit the sphere, satisfy the equation
-// dot((p(t) - c), (p(t) - c)) = r*r
-// Which is equivalent to
-// dot(A + t*B - c), (A + t*B - c)) = r*r
-// Where A is the origin of the ray, t is its length, and B is its direction
+    hit_record rec;
 
-// This expands to the quadratic
-// t*t*dot(B, B) + 2*t*dot(B, A - C) + dot(A - C, A - C) - r*r = 0
-// For this quadratic, the number of positive roots indicates collisions
-// 0 roots has no collion
-// 1 root has 1 collision
-// 2 roots has 2 collisions
-float hit_sphere(const vec3& center, float radius, const ray& r) {
-    vec3 oc = r.origin() - center;
-    float a = dot(r.direction(), r.direction());
-    float b = 2.0 * dot(oc, r.direction());
-    float c = dot(oc, oc) - radius*radius;
-    float discriminant = b*b - 4*a*c;
-    if (discriminant < 0) {
-        return -1.0;
+    // If a ray from the origin hits a hitable object, return the normal
+    // Represented by colors
+    if (world->hit(r, 0.0, MAXFLOAT, rec)) {
+        return 0.5*vec3(rec.normal.x()+1, rec.normal.y()+1, rec.normal.z()+1);
     }
+
+    // If a ray hits nothing, blend white and blue based on the ray's y coord
     else {
-        return (-b - sqrt(discriminant)) / (2.0*a);
+        // Turn ray into a unit vector. This makes -1.0 < y < 1.0
+        vec3 unit_direction = unit_vector(r.direction());
+
+        // Scale ray to 0.0 < t < 1.0
+        float t = 0.5*(unit_direction.y() + 1.0);
+
+        // Return a linear interpolation (lerp) between
+        // blue (t=1.0) and white (t=0.0)
+        return (1.0-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
     }
-}
-
-vec3 color(const ray& r) {
-    // Blend white and blue depending on the y coord of the ray
-
-    // If the ray hits a sphere centered at (0, 0, -1) with radius 0.5
-    // Return red for that pixel
-    float t = hit_sphere(vec3(0, 0, -1), 0.5, r);
-    if (t > 0.0) {
-        vec3 N = unit_vector(r.point_at_parameter(t) - vec3(0, 0, -1));
-        return 0.5*vec3(N.x()+1, N.y()+1, N.z()+1);
-    }
-
-    // Turn ray into a unit vector. This makes -1.0 < y < 1.0
-    vec3 unit_direction = unit_vector(r.direction());
-
-    // Scale ray to 0.0 < t < 1.0
-    t = 0.5*(unit_direction.y() + 1.0);
-
-    // Return a linear interpolation (lerp) between
-    // blue (t=1.0) and white (t=0.0)
-    return (1.0-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
 }
 
 int main() {
@@ -91,6 +64,12 @@ int main() {
     vec3 vertical(0.0, 2.0, 0.0);
     vec3 origin(0.0, 0.0, 0.0);
 
+    // Create a list of hitable objects
+    hitable *list[2];
+    list[0] = new sphere(vec3(0,0,-1), 0.5);
+    list[1] = new sphere(vec3(0,-100.5,-1), 100);
+    hitable *world = new hitable_list(list,2);
+
     // Write pixels out in rows from left to right (int i)
     // Write rows from top to bottom (int j)
     // Set r, g, and b to values between 0.0 and 1.0
@@ -100,8 +79,13 @@ int main() {
         for (int i = 0; i < nx; i++) {
             float u = float(i) / float(nx);
             float v = float(j) / float(ny);
+
+            // Create a ray from the origin to the point through current pixel
             ray r(origin, lower_left_corner + u*horizontal + v*vertical);
-            vec3 col = color(r);
+
+            vec3 p = r.point_at_parameter(2.0);
+            vec3 col = color(r, world);
+
             int ir = int(255.99*col[0]);
             int ig = int(255.99*col[1]);
             int ib = int(255.99*col[2]);
