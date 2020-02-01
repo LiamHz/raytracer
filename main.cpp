@@ -2,10 +2,41 @@
 #include <fstream>
 #include "ray.h"
 
-// Write a ppm image file
+// Write a ppm image file with a background, and a sphere using ray tracing
+
+// The equation for a sphere  at (cx, cy, cz) is
+// dot((p - c), (p - c)) = r*r
+// Where c is the center of the sphere, p is a point on the sphere,
+// and r is the radius of the sphere
+
+// Rays that hit the sphere, satisfy the equation
+// dot((p(t) - c), (p(t) - c)) = r*r
+// Which is equivalent to
+// dot(A + t*B - c), (A + t*B - c)) = r*r
+// Where A is the origin of the ray, t is its length, and B is its direction
+// Which expands to the quadratic
+// t*t*dot(B, B) + 2*t*dot(B, A - C) + dot(A - C, A - C) - r*r = 0
+// For this quadratic, the number of positive roots indicates collisions
+// 0 roots has no collion
+// 1 root has 1 collision
+// 2 roots has 2 collisions
+bool hit_sphere(const vec3& center, float radius, const ray& r) {
+    vec3 oc = r.origin() - center;
+    float a = dot(r.direction(), r.direction());
+    float b = 2.0 * dot(oc, r.direction());
+    float c = dot(oc, oc) - radius*radius;
+    float discriminant = b*b - 4*a*c;
+    return (discriminant > 0);
+}
 
 vec3 color(const ray& r) {
     // Blend white and blue depending on the y coord of the ray
+
+    // If the ray hits a sphere centered at (0, 0, -1) with radius 0.5
+    // Return red
+    if (hit_sphere(vec3(0, 0, 1), 0.5, r)) {
+        return vec3(1, 0, 0);
+    }
 
     // Turn ray into a unit vector. This makes -1.0 < y < 1.0
     vec3 unit_direction = unit_vector(r.direction());
@@ -20,8 +51,8 @@ vec3 color(const ray& r) {
 
 int main() {
     // Set the width and height of canvas
-    int nx = 200;
-    int ny = 100;
+    int nx = 720;
+    int ny = 480;
 
     // Create a ppm file to store the image data
     std::ofstream ofs;
