@@ -2,14 +2,17 @@
 #define SPHEREH
 
 #include "hitable.h"
+// #include "material.h"
 
 class sphere: public hitable {
-    public:
-        sphere() {}
-        sphere(vec3 cen, float r) : center(cen), radius(r) {};
-        virtual bool hit(const ray& r, float tmin, float tmax, hit_record& rec) const;
-        vec3 center;
-        float radius;
+public:
+    sphere() {}
+    sphere(vec3 cen, float r, material *m) : center(cen), radius(r), mat_ptr(m) {};
+    virtual bool hit(const ray& r, float tmin, float tmax, hit_record& rec) const;
+
+    vec3 center;
+    float radius;
+    material *mat_ptr;
 };
 
 // The equation for a sphere  at (cx, cy, cz) is
@@ -44,6 +47,7 @@ bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const 
             rec.t = temp;
             rec.p = r.point_at_parameter(rec.t);
             rec.normal = (rec.p - center) / radius;
+            rec.mat_ptr = mat_ptr;
             return true;
         }
         // Check the other sign of the sqrt
@@ -52,6 +56,7 @@ bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const 
             rec.t = temp;
             rec.p = r.point_at_parameter(rec.t);
             rec.normal = (rec.p - center) / radius;
+            rec.mat_ptr = mat_ptr;
             return true;
         }
     }

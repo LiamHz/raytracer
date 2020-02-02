@@ -2,33 +2,27 @@
 #include <fstream>
 #include "sphere.h"
 #include "hitable_list.h"
-#include "ray.h"
 #include "camera.h"
+#include "material.h"
 
 // Write a ppm image file with a background, and a sphere using ray tracing
 
-// Used to create diffuse materials
-vec3 random_in_unit_sphere() {
-    vec3 p;
-    // Select a random point in a unit cube
-    // Repeat until that point is also in unit sphere
-    // Point is in unit sphere if squared length is less than 1.0
-    do {
-        p = 2.0 * vec3(drand48(),drand48(),drand48()) - vec3(1,1,1);
-    } while (p.squared_length() >= 1.0);
-    return p;
-}
-
-vec3 color(const ray& r, hitable *world) {
+vec3 color(const ray& r, hitable *world, int depth) {
     hit_record rec;
 
     // If a ray from the origin hits a hitable object, return the normal
     // Represented by colors
 
-    // Setting t_min to 0.0001 (instead of 0) prevents shadow acne
-    if (world->hit(r, 0.0001, MAXFLOAT, rec)) {
-        vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-        return 0.5 * color( ray(rec.p, target - rec.p), world);
+    // Setting t_min to 0.001 (instead of 0) prevents shadow acne
+    if (world->hit(r, 0.001, MAXFLOAT, rec)) {
+        ray scattered;
+        vec3 attenuation;
+        if (depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
+             return attenuation * color(scattered, world, depth + 1);
+        }
+        else {
+            return vec3(0, 0 , 0);
+        }
     }
 
     // If a ray hits nothing, blend white and blue based on the ray's y coord
@@ -37,11 +31,11 @@ vec3 color(const ray& r, hitable *world) {
         vec3 unit_direction = unit_vector(r.direction());
 
         // Scale ray to 0.0 < t < 1.0
-        float t = 0.5*(unit_direction.y() + 1.0);
+        float t = 0.5 * (unit_direction.y() + 1.0);
 
         // Return a linear interpolation (lerp) between
         // blue (t=1.0) and white (t=0.0)
-        return (1.0-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
+        return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
     }
 }
 
@@ -49,7 +43,7 @@ int main() {
     // Set the width and height of canvas
     int nx = 720;
     int ny = 480;
-    int ns = 50;
+    int ns = 10;
 
     // Create a ppm file to store the image data
     std::ofstream ofs;
@@ -73,10 +67,12 @@ int main() {
     ofs << "P3\n" << nx << " " << ny << "\n255\n";
 
     // Create a list of hitable objects
-    hitable *list[2];
-    list[0] = new sphere(vec3(0,0,-1), 0.5);
-    list[1] = new sphere(vec3(0,-100.5,-1), 100);
-    hitable *world = new hitable_list(list,2);
+    hitable *list[4];
+    list[0] = new sphere(vec3(0,0,-1), 0.5, new lambertian(vec3(0.8, 0.3, 0.3)));
+    list[1] = new sphere(vec3(0,-100.5,-1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
+    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2)));
+    list[3] = new sphere(vec3(-1, 0, -1), 0.5, new metal(vec3(0.8, 0.8, 0.8)));
+    hitable *world = new hitable_list(list,4);
 
     // Instantiate camera
     camera cam;
@@ -86,7 +82,7 @@ int main() {
     // Set r, g, and b to values between 0.0 and 1.0
     // Convert from 0 to 1 float range to 0 to 256 int range
     // Write RGB triplet to file
-    for (int j= ny-1; j>= 0; j--) {
+    for (int j = ny-1; j>= 0; j--) {
         for (int i = 0; i < nx; i++) {
 
             // Multisample Antialiasing (MSAA)
@@ -99,11 +95,13 @@ int main() {
                 float u = float(i + drand48()) / float(nx);
                 float v = float(j + drand48()) / float(ny);
                 ray r = cam.get_ray(u, v);
-                vec3 p = r.point_at_parameter(2.0);
-                col += color(r, world);
+                col += color(r, world, 0);
             }
 
             col /= float(ns);
+
+            // Gamma correct pixel values
+            col = vec3( sqrt(col[0]), sqrt(col[1]), sqrt(col[2]) );
 
             // Scale pixel values from float 0 to 1, to int 0 to 256
             int ir = int(255.99*col[0]);
