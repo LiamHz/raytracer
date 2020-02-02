@@ -76,7 +76,12 @@ int main() {
     hitable *world = new hitable_list(list,5);
 
     // Instantiate camera
-    camera cam(vec3(-2, 2, 1), vec3(0, 0, -1), vec3(0, 1, 0), 90, float(nx) / float(ny));
+    vec3 lookfrom(3, 3, 2);
+    vec3 lookat(0, 0, -1);
+    float dist_to_focus = (lookfrom - lookat).length();
+    float aperture = 2.0;
+
+    camera cam(lookfrom, lookat, vec3(0, 1, 0), 20, float(nx) / float(ny), aperture, dist_to_focus);
 
     // Write pixels out in rows from left to right (int i)
     // Write rows from top to bottom (int j)
