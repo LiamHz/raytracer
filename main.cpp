@@ -7,14 +7,28 @@
 
 // Write a ppm image file with a background, and a sphere using ray tracing
 
-vec3 color(const ray& r, hitable *world) {
+// Used to create diffuse materials
+vec3 random_in_unit_sphere() {
+    vec3 p;
+    // Select a random point in a unit cube
+    // Repeat until that point is also in unit sphere
+    // Point is in unit sphere if squared length is less than 1.0
+    do {
+        p = 2.0 * vec3(drand48(),drand48(),drand48()) - vec3(1,1,1);
+    } while (p.squared_length() >= 1.0);
+    return p;
+}
 
+vec3 color(const ray& r, hitable *world) {
     hit_record rec;
 
     // If a ray from the origin hits a hitable object, return the normal
     // Represented by colors
-    if (world->hit(r, 0.0, MAXFLOAT, rec)) {
-        return 0.5*vec3(rec.normal.x()+1, rec.normal.y()+1, rec.normal.z()+1);
+
+    // Setting t_min to 0.0001 (instead of 0) prevents shadow acne
+    if (world->hit(r, 0.0001, MAXFLOAT, rec)) {
+        vec3 target = rec.p + rec.normal + random_in_unit_sphere();
+        return 0.5 * color( ray(rec.p, target - rec.p), world);
     }
 
     // If a ray hits nothing, blend white and blue based on the ray's y coord
