@@ -132,6 +132,7 @@ int main() {
     // Write RGB triplet to file
     for (int j = ny-1; j>= 0; j--) {
         for (int i = 0; i < nx; i++) {
+            fprintf(stderr,"\rRendering (%dx%d) %5.2f%%", nx, ny, double(100.0*(((ny-j-1)*nx)+i)/(ny*nx)));
 
             // Multisample Antialiasing (MSAA)
             // Send ns samples through each pixel, with the direction of each
