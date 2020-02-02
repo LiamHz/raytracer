@@ -131,10 +131,10 @@ int main() {
     // Convert from 0 to 1 float range to 0 to 256 int range
     // Write RGB triplet to file
     for (int j = ny-1; j>= 0; j--) {
-        for (int i = 0; i < nx; i++) {
-            // Display rendering progress in console as a percentage
-            fprintf(stderr,"\rRendering (%dx%d) %5.2f%%", nx, ny, double(100.0*(((ny-j-1)*nx)+i)/(ny*nx)));
+        // Display rendering progress in console as a percentage
+        fprintf(stderr,"\rRendering (%dx%d) %5.2f%%", nx, ny, double(100.0*((ny-j)*nx)/(ny*nx)));
 
+        for (int i = 0; i < nx; i++) {
             // Multisample Antialiasing (MSAA)
             // Send ns samples through each pixel, with the direction of each
             // ray slightly randomized. The pixel takes the average color of
