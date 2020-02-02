@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+
 #include "sphere.h"
 #include "hitable_list.h"
 #include "camera.h"
@@ -91,7 +92,7 @@ int main() {
     // Set the width and height of canvas
     int nx = 1920;
     int ny = 1080;
-    int ns = 50;
+    int ns = 100;
 
     // Create a ppm file to store the image data
     std::ofstream ofs;
