@@ -41,8 +41,8 @@ vec3 color(const ray& r, hitable *world, int depth) {
 
 int main() {
     // Set the width and height of canvas
-    int nx = 720;
-    int ny = 480;
+    int nx = 480;
+    int ny = 360;
     int ns = 10;
 
     // Create a ppm file to store the image data
@@ -67,12 +67,13 @@ int main() {
     ofs << "P3\n" << nx << " " << ny << "\n255\n";
 
     // Create a list of hitable objects
-    hitable *list[4];
+    hitable *list[5];
     list[0] = new sphere(vec3(0,0,-1), 0.5, new lambertian(vec3(0.8, 0.3, 0.3)));
     list[1] = new sphere(vec3(0,-100.5,-1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
-    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2)));
-    list[3] = new sphere(vec3(-1, 0, -1), 0.5, new metal(vec3(0.8, 0.8, 0.8)));
-    hitable *world = new hitable_list(list,4);
+    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.3));
+    list[3] = new sphere(vec3(-1, 0, -1), 0.5, new dielectric(1.5));
+    list[4] = new sphere(vec3(-1, 0, -1), -0.45, new dielectric(1.5));
+    hitable *world = new hitable_list(list,5);
 
     // Instantiate camera
     camera cam;
