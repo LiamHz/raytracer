@@ -1,6 +1,7 @@
 #ifndef SPHEREH
 #define SPHEREH
 
+#include "aabb.h"
 #include "hittable.h"
 // #include "material.h"
 
@@ -9,6 +10,7 @@ public:
     sphere() {}
     sphere(vec3 cen, float r, material *m) : center(cen), radius(r), mat_ptr(m) {};
     virtual bool hit(const ray& r, float tmin, float tmax, hit_record& rec) const;
+    virtual bool bounding_box(float t0, float t1, aabb &box) const = 0;
 
     vec3 center;
     float radius;
@@ -61,6 +63,12 @@ bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const 
         }
     }
     return false;
+}
+
+bool sphere::bounding_box(float t0, float t1, aabb &box) const {
+    box = aabb(center - vec3(radius, radius, radius),
+               center + vec3(radius, radius, radius));
+    return true;
 }
 
 #endif
