@@ -4,6 +4,7 @@
 #include "bvh.h"
 #include "sphere.h"
 #include "camera.h"
+#include "perlin.h"
 #include "texture.h"
 #include "material.h"
 #include "moving_sphere.h"
@@ -90,19 +91,19 @@ hittable *random_scene() {
         }
     }
 
-    list[i++] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
+    texture *pertext = new noise_texture(2);
+    list[i++] = new sphere(vec3(0, 1, 0), 1.0, new lambertian(pertext));
     list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(new constant_texture(vec3(0.4, 0.2, 0.1))));
     list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
 
     return new bvh_node(list, i, 0.0, 1.0);
 }
 
-
 int main() {
     // Set the width and height of canvas
     int nx = 352;
     int ny = 240;
-    int ns = 12;
+    int ns = 25;
 
     // Create a ppm file to store the image data
     std::ofstream ofs;
