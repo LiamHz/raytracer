@@ -7,8 +7,10 @@ class bvh_node : public hittable {
     public:
         bvh_node() {}
         bvh_node(hittable **l, int n, float time0, float time1);
+
         virtual bool hit(const ray &r, float tmin, float tmax, hit_record &rec) const;
         virtual bool bounding_box(float t0, float t1, aabb &box) const;
+
         hittable *left;
         hittable *right;
         aabb box;
@@ -80,7 +82,6 @@ int box_z_compare (const void * a, const void * b) {
 }
 
 bvh_node::bvh_node(hittable **l, int n, float time0, float time1) {
-    std::cout << "box gang" << std::endl;
     int axis = int(3*drand48());
     if (axis == 0)
        qsort(l, n, sizeof(hittable *), box_x_compare);

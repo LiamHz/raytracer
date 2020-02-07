@@ -5,6 +5,7 @@
 #include "aabb.h"
 
 class material;
+class aabb;
 
 struct hit_record {
     float t;

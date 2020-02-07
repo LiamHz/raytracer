@@ -42,7 +42,6 @@ bool hittable_list::bounding_box(float t0, float t1, aabb &box) const {
         else
             return false;
     }
-    std::cout << "box gang" << std::endl;
     return true;
 }
 
