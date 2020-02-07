@@ -1,12 +1,13 @@
 #include <iostream>
 #include <fstream>
 
+#include "bvh.h"
 #include "sphere.h"
+#include "camera.h"
+#include "texture.h"
+#include "material.h"
 #include "moving_sphere.h"
 #include "hittable_list.h"
-#include "camera.h"
-#include "material.h"
-#include "bvh.h"
 
 // Write a ppm image file with a background, and a sphere using ray tracing
 
@@ -47,7 +48,11 @@ hittable *random_scene() {
     hittable **list = new hittable*[n+1];
 
     // The sphere which all others sit upon
-    list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(vec3(0.5, 0.5, 0.5)));
+    texture *checker = new checker_texture(
+        new constant_texture(vec3(0.2, 0.3, 0.1)),
+        new constant_texture(vec3(0.9, 0.9, 0.9))
+    );
+    list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(checker));
 
     int i = 1;
     for (int a = -11; a < 11; a++) {
@@ -61,9 +66,10 @@ hittable *random_scene() {
                         center,
                         center+vec3(0, 0.5*drand48(), 0),
                         0.0, 1.0, 0.2,
-                        new lambertian(vec3(drand48()*drand48(),
+                        new lambertian( new constant_texture(vec3(
                                             drand48()*drand48(),
-                                            drand48()*drand48()))
+                                            drand48()*drand48(),
+                                            drand48()*drand48())))
                     );
                 }
                 // Metal
@@ -85,7 +91,7 @@ hittable *random_scene() {
     }
 
     list[i++] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
-    list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
+    list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(new constant_texture(vec3(0.4, 0.2, 0.1))));
     list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
 
     return new bvh_node(list, i, 0.0, 1.0);
