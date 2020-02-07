@@ -2,16 +2,17 @@
 #include <fstream>
 
 #include "sphere.h"
-#include "hitable_list.h"
+#include "moving_sphere.h"
+#include "hittable_list.h"
 #include "camera.h"
 #include "material.h"
 
 // Write a ppm image file with a background, and a sphere using ray tracing
 
-vec3 color(const ray& r, hitable *world, int depth) {
+vec3 color(const ray& r, hittable *world, int depth) {
     hit_record rec;
 
-    // If a ray from the origin hits a hitable object, return the normal
+    // If a ray from the origin hits a hittable object, return the normal
     // Represented by colors
 
     // Setting t_min to 0.001 (instead of 0) prevents shadow acne
@@ -40,9 +41,9 @@ vec3 color(const ray& r, hitable *world, int depth) {
     }
 }
 
-hitable *random_scene() {
+hittable *random_scene() {
     int n = 500;
-    hitable **list = new hitable*[n+1];
+    hittable **list = new hittable*[n+1];
 
     // The sphere which all others sit upon
     list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(vec3(0.5, 0.5, 0.5)));
@@ -55,8 +56,10 @@ hitable *random_scene() {
             if ((center-vec3(4,0.2,0)).length() > 0.9) {
                 //  Diffuse
                 if (choose_mat < 0.8) {
-                    list[i++] = new sphere(
-                        center, 0.2,
+                    list[i++] = new moving_sphere(
+                        center,
+                        center+vec3(0, 0.5*drand48(), 0),
+                        0.0, 1.0, 0.2,
                         new lambertian(vec3(drand48()*drand48(),
                                             drand48()*drand48(),
                                             drand48()*drand48()))
@@ -84,15 +87,15 @@ hitable *random_scene() {
     list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
     list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
 
-    return new hitable_list(list, i);
+    return new hittable_list(list, i);
 }
 
 
 int main() {
     // Set the width and height of canvas
-    int nx = 1920;
-    int ny = 1080;
-    int ns = 100;
+    int nx = 352;
+    int ny = 240;
+    int ns = 10;
 
     // Create a ppm file to store the image data
     std::ofstream ofs;
@@ -115,16 +118,17 @@ int main() {
 
     ofs << "P3\n" << nx << " " << ny << "\n255\n";
 
-    // Create hitable objects
-    hitable *world = random_scene();
+    // Create hittable objects
+    hittable *world = random_scene();
 
     // Instantiate camera
     vec3 lookfrom(13, 2, 3);
     vec3 lookat(0, 0, 0);
     float dist_to_focus = 10.0; //(lookfrom - lookat).length();
-    float aperture = 0.1;
+    float aperture = 0.0;
 
-    camera cam(lookfrom, lookat, vec3(0, 1, 0), 20, float(nx) / float(ny), aperture, dist_to_focus);
+    camera cam(lookfrom, lookat, vec3(0, 1, 0), 20, float(nx) / float(ny),
+               aperture, dist_to_focus, 0.0, 1.0);
 
     // Write pixels out in rows from left to right (int i)
     // Write rows from top to bottom (int j)
@@ -133,7 +137,9 @@ int main() {
     // Write RGB triplet to file
     for (int j = ny-1; j>= 0; j--) {
         // Display rendering progress in console as a percentage
-        fprintf(stderr,"\rRendering (%dx%d) %5.2f%%", nx, ny, double(100.0*((ny-j)*nx)/(ny*nx)));
+        if (j % 5 == 0){
+            fprintf(stderr,"\rRendering (%dx%d) %5.2f%%", nx, ny, double(100.0*((ny-j)*nx)/(ny*nx)));
+        }
 
         for (int i = 0; i < nx; i++) {
             // Multisample Antialiasing (MSAA)

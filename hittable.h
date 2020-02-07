@@ -1,5 +1,5 @@
-#ifndef HITABLEH
-#define HITABLEH
+#ifndef hittableH
+#define hittableH
 
 #include "ray.h"
 
@@ -12,7 +12,7 @@ struct hit_record {
     material *mat_ptr;
 };
 
-class hitable {
+class hittable {
 public:
     virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const = 0;
 };

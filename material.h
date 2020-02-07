@@ -1,7 +1,7 @@
 #ifndef MATERIALH
 #define MATERIALH
 
-#include "hitable.h"
+#include "hittable.h"
 #include "ray.h"
 
 struct hit_record;
@@ -52,7 +52,7 @@ public:
     lambertian(const vec3& a) : albedo(a) {}
     virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {
         vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-        scattered = ray(rec.p, target - rec.p);
+        scattered = ray(rec.p, target-rec.p,  r_in.time());
         attenuation = albedo;
         return true;
     }
@@ -99,13 +99,13 @@ public:
                 cosine = -dot(r_in.direction(), rec.normal) / r_in.direction().length();
             }
             if (refract(r_in.direction(), outward_normal, ni_over_nt, refracted))
-            reflect_prob = schlick(cosine, ref_idx);
+                reflect_prob = schlick(cosine, ref_idx);
             else
-            reflect_prob = 1.0;
+                reflect_prob = 1.0;
             if (drand48() < reflect_prob)
-            scattered = ray(rec.p, reflected);
+                scattered = ray(rec.p, reflected);
             else
-            scattered = ray(rec.p, refracted);
+                scattered = ray(rec.p, refracted);
             return true;
     }
 
@@ -113,4 +113,3 @@ public:
 };
 
 #endif
-
